@@ -93,6 +93,17 @@ ListStream.prototype.duplicate = function () {
   return copy
 }
 
+// Empties the stream by resetting the internal chunks array and returns the stream instance for chaining
+ListStream.prototype.clear = function () {
+  this._chunks = []
+  return this
+}
+
+// Returns the stream's contents as a JSON string
+ListStream.prototype.toJSON = function () {
+  return JSON.stringify(this._chunks)
+}
+
 module.exports = ListStream
 module.exports.obj = function (options, callback) {
   if (typeof options === 'function') {
