@@ -105,3 +105,92 @@ test('duplexicity', function (t) {
     })
   }
 })
+
+// Tests if clear() method empties the stream by checking length and internal _chunks array
+test('clear() empties the stream', function (t) {
+  const ls = ListStream.obj()
+  ls.write('foo')
+  ls.write('bar')
+  t.equal(ls.length, 2, 'stream has 2 items')
+  ls.clear()
+  t.equal(ls.length, 0, 'stream is empty after clear()')
+  t.deepEqual(ls._chunks, [], 'internal _chunks array is empty')
+  t.end()
+})
+
+// Verifies that clear() allows writing new items after clearing by using write() and get() methods
+test('clear() allows writing after clearing', function (t) {
+  const ls = ListStream.obj()
+  ls.write('foo')
+  ls.clear()
+  ls.write('bar')
+  t.equal(ls.length, 1, 'stream has 1 item after clearing and writing')
+  t.equal(ls.get(0), 'bar', 'new item is correct')
+  t.end()
+})
+
+// Checks if ListStream correctly handles an empty stream, testing end() method and callback functionality
+test('handles empty stream', function (t) {
+  const ls = ListStream.obj(function (err, data) {
+    t.notOk(err, 'no error')
+    t.deepEqual(data, [], 'got empty array')
+    t.end()
+  })
+  ls.end()
+})
+
+// Verifies ListStream can handle a large number of small objects, testing write(), length property, and get() method
+test('handles very large number of small objects', function (t) {
+  const COUNT = 1000000 // 1 million objects
+  const ls = ListStream.obj()
+
+  for (let i = 0; i < COUNT; i++) {
+    ls.write(i)
+  }
+
+  t.equal(ls.length, COUNT, `stream has ${COUNT} items`)
+  t.equal(ls.get(COUNT - 1), COUNT - 1, 'last item is correct')
+  t.end()
+})
+
+// Tests if ListStream can correctly store and retrieve very large objects, using write(), length property, and get() method
+test('handles very large objects', function (t) {
+  const largeObj = { data: 'x'.repeat(10 * 1024 * 1024) } // 10 MB object
+  const ls = ListStream.obj()
+
+  ls.write(largeObj)
+
+  t.equal(ls.length, 1, 'stream has 1 item')
+  t.equal(ls.get(0), largeObj, 'large object is correctly stored and retrieved')
+  t.end()
+})
+
+// Tests if toJSON() correctly serializes stream contents for primitive types
+test('toJSON() serializes stream contents with primitive types', function (t) {
+  const ls = ListStream.obj()
+  ls.write('foo')
+  ls.write(42)
+  ls.write(true)
+
+  const json = ls.toJSON()
+  t.equal(json, '["foo",42,true]', 'JSON string is correct for primitive types')
+  t.equal(JSON.parse(json).length, 3, 'Parsed JSON has correct number of items')
+  t.end()
+})
+
+// Verifies toJSON() correctly handles complex objects and maintains their structure
+test('toJSON() handles complex objects', function (t) {
+  const ls = ListStream.obj()
+  ls.write({ name: 'Alice', age: 30 })
+  ls.write([1, 2, 3])
+  ls.write({ nested: { a: 1, b: [2, 3] } })
+
+  const json = ls.toJSON()
+  const parsed = JSON.parse(json)
+
+  t.equal(parsed.length, 3, 'Parsed JSON has correct number of items')
+  t.deepEqual(parsed[0], { name: 'Alice', age: 30 }, 'First object correctly serialized')
+  t.deepEqual(parsed[1], [1, 2, 3], 'Array correctly serialized')
+  t.deepEqual(parsed[2], { nested: { a: 1, b: [2, 3] } }, 'Nested object correctly serialized')
+  t.end()
+})

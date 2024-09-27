@@ -24,7 +24,7 @@
     "readable-stream": "~3.4.0"
   },
   "devDependencies": {
-    "faucet": "0.0.1",
+    "faucet": "^0.0.4",
     "standard": "~14.3.1",
     "tape": "~4.11.0",
     "through2": "~0.4.1"
